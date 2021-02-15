@@ -1,4 +1,4 @@
-Indexing and searching is very efficient. 
+Fast indexing and searching
 
 ## Indexing
 
@@ -18,6 +18,6 @@ Indexing and searching is very efficient.
 
 ## Querying
 
-1. On GET request, we first lookup the suffix array for matching words. So. "tr" will return "trump", "trust", "travel" etc.
+1. On GET request, we first lookup the suffix array for matching words. So. "tr" will return "trump", "trust", "travel" as present in the article titles and bodies.
 2. First lookup the titleIndex for the word and get the matching documents.
 3. 
