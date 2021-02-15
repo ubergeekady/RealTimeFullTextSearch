@@ -29,7 +29,6 @@ var stopwords = map[string]struct{}{
 
 func tokenize(text string) []string {
     return strings.FieldsFunc(text, func(r rune) bool {
-        // Split on any character that is not a letter or a number.
         return !unicode.IsLetter(r) && !unicode.IsNumber(r)
     })
 }
@@ -77,27 +76,6 @@ func maxSlice(keys []int) int{
         }
     }
     return max
-}
-
-func buildDocumentIndex() {
-    n1 := NewsItem{
-        title: "Covid Cases Surge in Maharashtra Again, State Records Over 4,000 Cases in 24 Hrs, Mumbai More than 600",
-        body: "The state last recorded 4,000-plus cases (4,382) on January 6 and the city recorded (607) daily cases on January 14, exactly a month ago.",
-    }
-
-    n2 := NewsItem{
-        title: "Activist Arrested for Greta man Thunberg 'Toolkit' Was Working With Pro-Khalistani Group: Delhi Police",
-        body: "According to officials, Ravi is 21 years old and lives in Bengaluru. She was active in allegedly disseminating the toolkit, which Thunberg had referred to in her post for the farmers and attached a Google document with details.",
-    }
-
-    n3 := NewsItem{
-        title: "PM Modi's Photo, Bhagwad Gita & Names of toolkit 25,000 Citizens: Pvt Satellite to be Launched by Feb-End",
-        body: "The nanosatellite according has been many developed by SpaceKidz India, an organisation dedicated to promoting space science among students.",
-    }
-
-    addDocument(n1)
-    addDocument(n2)
-    addDocument(n3)
 }
 
 func buildIndexes() {
@@ -180,15 +158,30 @@ func home(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func buildDocumentIndex() {
+    n1 := NewsItem{
+        title: "Covid Cases Surge in Maharashtra Again, State Records Over 4,000 Cases in 24 Hrs, Mumbai More than 600",
+        body: "The state last recorded 4,000-plus cases (4,382) on January 6 and the city recorded (607) daily cases on January 14, exactly a month ago.",
+    }
+
+    n2 := NewsItem{
+        title: "Activist Arrested for Greta man Thunberg 'Toolkit' Was Working With Pro-Khalistani Group: Delhi Police",
+        body: "According to officials, Ravi is 21 years old and lives in Bengaluru. She was active in allegedly disseminating the toolkit, which Thunberg had referred to in her post for the farmers and attached a Google document with details.",
+    }
+
+    n3 := NewsItem{
+        title: "PM Modi's Photo, Bhagwad Gita & Names of toolkit 25,000 Citizens: Pvt Satellite to be Launched by Feb-End",
+        body: "The nanosatellite according has been many developed by SpaceKidz India, an organisation dedicated to promoting space science among students.",
+    }
+
+    addDocument(n1)
+    addDocument(n2)
+    addDocument(n3)
+}
+
 func main() {
     buildDocumentIndex()
-    fmt.Println(documentsIndex)
-
     buildIndexes()
-
-    fmt.Println(titleindex)
-    fmt.Println(bodyindex) 
-    
     buildSuffixArray()
 
     r := mux.NewRouter()
