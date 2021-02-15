@@ -116,14 +116,10 @@ func buildSuffixArray(){
     for key, _ := range titleindex{
         words = append(words, key)
     }
-
     for key, _ := range bodyindex{
         words = append(words, key)
     }
-
     fmt.Println(words)
-
-    // use \x00 to start each string
     joinedStrings = "\x00" + strings.Join(words, "\x00")
     sa = suffixarray.New([]byte(joinedStrings))
 }
