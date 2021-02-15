@@ -18,7 +18,8 @@ Fast indexing and searching
 
 ## Querying
 
-1. On GET request, we first lookup the suffix array for matching words. So. "tr" will return "trump", "trust", "travel" as present in the article titles and bodies.
-2. First lookup the titleIndex for the word and get the matching documents.
-3. 
-
+1. On GET request, we first lookup the suffix array for matching words. So. "tr" will return "trump", "trust", "travel" as present in the article titles and bodies. Works for multi-word search strings.
+2. First lookup the titleIndex for the word/words and get the matching documents.
+3. Then lookup the bodyIndex for the word/words and get the matching documents. 
+4. Merge search results.
+5. Return JSON

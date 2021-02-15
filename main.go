@@ -9,11 +9,12 @@ import (
     "log"
     "net/http"
     "github.com/gorilla/mux"
+    "encoding/json"
 )
 
 type NewsItem struct{
-    title   string
-    body    string
+    title   string `json:"title"`
+    body    string `json:"body"`
 }
 
 var documentsIndex = make(map[int]NewsItem)
@@ -78,7 +79,17 @@ func maxSlice(keys []int) int{
     return max
 }
 
+func sliceContains(s []int, e int) bool {
+    for _, a := range s {
+        if a == e {
+            return true
+        }
+    }
+    return false
+}
+
 func buildIndexes() {
+    fmt.Println("Building indexes ...")
     keys := make([]int, 0, len(documentsIndex))
     for k := range documentsIndex {
         keys = append(keys, k)
@@ -112,6 +123,7 @@ func buildIndexes() {
 }
 
 func buildSuffixArray(){
+    fmt.Println("Building suffixarray ...")
     var words []string
     for key, _ := range titleindex{
         words = append(words, key)
@@ -119,35 +131,81 @@ func buildSuffixArray(){
     for key, _ := range bodyindex{
         words = append(words, key)
     }
-    fmt.Println(words)
     joinedStrings = "\x00" + strings.Join(words, "\x00")
     sa = suffixarray.New([]byte(joinedStrings))
+}
+
+func searchSuffixArray(word string) []string{
+    match, err := regexp.Compile("\x00"+word+"[^\x00]*")
+    if err != nil {
+        panic(err)
+    }
+    ms := sa.FindAllIndex(match, -1)
+
+    var matchedWords []string
+    for _, m := range ms {
+        start, end := m[0], m[1]
+        matchWord := joinedStrings[start+1:end]
+        matchedWords = append(matchedWords, matchWord)
+    }
+    return matchedWords
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     switch r.Method {
     case "GET":
+        w.WriteHeader(http.StatusOK)        
         query := r.URL.Query().Get("query")
-
-        // User has typed in "he"
-        match, err := regexp.Compile("\x00"+query+"[^\x00]*")
-        if err != nil {
-            panic(err)
+        words := analyze(query)
+        if(len(words)==0){
+            w.Write([]byte(`{"message": "No Query Found"}`))
         }
-        ms := sa.FindAllIndex(match, -1)
 
         var matchedWords []string
-        for _, m := range ms {
-            start, end := m[0], m[1]
-            matchWord := joinedStrings[start+1:end]
-            matchedWords = append(matchedWords, matchWord)
+        for _, word := range words{
+            ret := searchSuffixArray(word)
+            matchedWords = append(matchedWords, ret...)
         }
 
         fmt.Println(matchedWords)
 
-        w.WriteHeader(http.StatusOK)
-        w.Write([]byte(`{"message": `+query+`}`))
+        var titleresults []int
+        for _, word := range matchedWords{
+            if val, ok := titleindex[word]; ok {
+                titleresults = append(titleresults, val...)
+            }
+        }
+
+        var bodyresults []int
+        for _, word := range matchedWords{
+            if val, ok := bodyindex[word]; ok {
+                bodyresults = append(bodyresults, val...)
+            }
+        }
+
+        var mergedResults []int
+        for _, num := range titleresults{
+            if sliceContains(mergedResults, num)==false{
+                mergedResults = append(mergedResults, num)
+            }
+        }
+
+        for _, num := range bodyresults{
+            if sliceContains(mergedResults, num)==false{
+                mergedResults = append(mergedResults, num)
+            }
+        }
+
+        var results []NewsItem
+        for _,val := range mergedResults{
+            results = append(results, documentsIndex[val])
+        }
+
+        fmt.Println(results)
+        json.NewEncoder(w).Encode(results)
+        
+
     default:
         w.WriteHeader(http.StatusNotFound)
         w.Write([]byte(`{"message": "invalid"}`))
@@ -157,6 +215,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 //Can be loaded from CSV or Database
 func buildDocumentIndex() {
+    fmt.Println("Adding documents...")
     n1 := NewsItem{
         title: "Covid Cases Surge in Maharashtra Again, State Records Over 4,000 Cases in 24 Hrs, Mumbai More than 600",
         body: "The state last recorded 4,000-plus cases (4,382) on January 6 and the city recorded (607) daily cases on January 14, exactly a month ago.",
