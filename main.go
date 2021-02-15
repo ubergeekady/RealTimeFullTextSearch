@@ -158,6 +158,8 @@ func home(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+
+//Can be loaded from CSV or Database
 func buildDocumentIndex() {
     n1 := NewsItem{
         title: "Covid Cases Surge in Maharashtra Again, State Records Over 4,000 Cases in 24 Hrs, Mumbai More than 600",
@@ -183,7 +185,6 @@ func main() {
     buildDocumentIndex()
     buildIndexes()
     buildSuffixArray()
-
     r := mux.NewRouter()
     r.HandleFunc("/", home)
     log.Fatal(http.ListenAndServe(":8080", r))    
